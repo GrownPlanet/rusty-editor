@@ -1,31 +1,22 @@
-use std::{fs::{self, File}, path::{Path, PathBuf}};
-
-use crate::piecetable::PieceTable;
+use crate::{document::Document, frontend};
 
 pub struct Editor {
-    piece_table: PieceTable,
-    file: File
+    document: Document,
+    // I am first going to make a working text editor
+    // config: Config,
 }
 
 impl Editor {
     pub fn new(path: &str) -> Result<Self, String> {
-        let path = Path::new(path);
+        let document = Document::new(path)?;
 
-        let (file_contents, file) = if path.exists() {
-            let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
-            let file = File::open(path).map_err(|e| e.to_string())?;
-            (content, file)
-        } else {
-            let content = String::new();
-            let file = File::create(path).map_err(|e| e.to_string())?;
-            (content, file)
-        };
+        Ok(Self { document })
+    }
 
-        let piece_table = PieceTable::new(file_contents);
+    pub fn run(&mut self) {
+        let screen_dimensions = (800, 600);
+        let title = "rusty text editor";
 
-        Ok(Self { 
-            piece_table, 
-            file,
-        })
+        frontend::run_frontend(screen_dimensions, title)
     }
 }
