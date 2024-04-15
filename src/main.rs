@@ -24,7 +24,7 @@ fn main() {
         exit(-1);
     }
 
-    let mut editor = match Editor::new(&args[1]) {
+    let editor = match Editor::new(&args[1]) {
         Ok(e) => e,
         Err(m) => {
             println!("Error creating editor: {}", m);

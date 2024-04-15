@@ -35,4 +35,12 @@ impl Document {
             file,
         })
     }
+
+    pub fn get_text(&self) -> String {
+        self.piece_table.generate_string()
+    }
+
+    pub fn get_cursor_pos(&self) -> (u32, u32) {
+        self.cursor
+    }
 }

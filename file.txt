@@ -2,7 +2,5 @@ fn main() {
     println!("Hello, World!");
 }
 
-fn text_editor() {
-	let text_editor = TextEditor::new();
-	text_editor.run();
-}
+  hello??   ..
+..............
