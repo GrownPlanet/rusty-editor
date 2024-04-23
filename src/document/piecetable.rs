@@ -1,25 +1,31 @@
+// This could be made faster
+// future reference:
+// https://code.visualstudio.com/blogs/2018/03/23/text-buffer-reimplementation#_boost-line-lookup-by-using-a-balanced-binary-tree
+
 use std::cmp::Ordering;
 
 // is it from the add buffer or the original buffer
 #[derive(Debug, Clone, Copy)]
-enum Which {
+enum Part {
     Add,
     Original,
 }
 
 // a single piece from the piece table
 struct Piece {
-    which: Which,
+    which: Part,
     start_index: usize,
     length: usize,
+    newlines: Vec<usize>,
 }
 
 impl Piece {
-    pub fn new(which: Which, start_index: usize, length: usize) -> Self {
+    pub fn new(which: Part, start_index: usize, length: usize, newlines: Vec<usize>) -> Self {
         Self {
             which,
             start_index,
             length,
+            newlines,
         }
     }
 }
@@ -33,7 +39,10 @@ pub struct PieceTable {
 impl PieceTable {
     // create a new table
     pub fn new(string: String) -> Self {
-        let piece = Piece::new(Which::Original, 0, string.len());
+        let newlines = Self::count_newlines(&string);
+
+        let piece = Piece::new(Part::Original, 0, string.len(), newlines);
+
         Self {
             original: string,
             add: String::new(),
@@ -42,13 +51,15 @@ impl PieceTable {
     }
 
     // generate a string from the table
-    pub fn generate_string(&self) -> String {
+    pub fn generate_string(&self, from: usize, to: usize) -> String {
         let mut generated_string = String::new();
+
+        let mut passed_newlines = 0;
 
         for piece in self.table.iter() {
             let s = match &piece.which {
-                Which::Add => &self.add[piece.start_index..(piece.start_index + piece.length)],
-                Which::Original => {
+                Part::Add => &self.add[piece.start_index..(piece.start_index + piece.length)],
+                Part::Original => {
                     &self.original[piece.start_index..(piece.start_index + piece.length)]
                 }
             };
@@ -64,9 +75,12 @@ impl PieceTable {
         for (i, piece) in self.table.iter().enumerate() {
             if index > passed_size && index < passed_size + piece.length {
                 let p1_len = index - passed_size;
-                let part1 = Piece::new(piece.which, piece.start_index, p1_len);
                 let p2_len = (passed_size + piece.length) - index;
-                let part2 = Piece::new(piece.which, piece.start_index + p1_len, p2_len);
+
+                // let split_vec = piece.
+
+                let part1 = Piece::new(piece.which, piece.start_index, p1_len, vec![]);
+                let part2 = Piece::new(piece.which, piece.start_index + p1_len, p2_len, vec![]);
 
                 self.table[i] = part1;
                 self.table.insert(i + 1, part2);
@@ -90,9 +104,16 @@ impl PieceTable {
         self.add.push_str(string);
         let i = self.split_at(index)?;
 
+        let newlines = Self::count_newlines(string);
+
         self.table.insert(
             i,
-            Piece::new(Which::Add, start_index, self.add.len() - start_index),
+            Piece::new(
+                Part::Add,
+                start_index,
+                self.add.len() - start_index,
+                newlines,
+            ),
         );
 
         Ok(())
@@ -156,5 +177,17 @@ impl PieceTable {
             len += piece.length;
         }
         len
+    }
+
+    fn count_newlines(string: &str) -> Vec<usize> {
+        let mut newlines = vec![];
+
+        for (i, c) in string.chars().enumerate() {
+            if c == '\n' {
+                newlines.push(i);
+            }
+        }
+
+        newlines
     }
 }

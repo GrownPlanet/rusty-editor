@@ -1,8 +1,7 @@
-use bevy::ecs::system::Resource;
+use std::process::exit;
 
 use crate::{document::Document, frontend};
 
-#[derive(Resource)]
 pub struct Editor {
     document: Document,
     // I am first going to make a working text editor
@@ -20,7 +19,10 @@ impl Editor {
         let screen_dimensions = (800, 600);
         let title = "rusty text editor";
 
-        frontend::run_frontend(screen_dimensions, title, self)
+        if let Err(s) = frontend::run_frontend(self) {
+            println!("Error: {}", s);
+            exit(-1);
+        }
     }
 
     // TODO: optimize this function so it only gets the text that fits on screen
