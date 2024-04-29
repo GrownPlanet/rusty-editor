@@ -51,22 +51,35 @@ impl PieceTable {
     }
 
     // generate a string from the table
-    pub fn generate_string(&self, from: usize, to: usize) -> String {
-        let mut generated_string = String::new();
+    pub fn generate_string(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
+        if from > to {
+            return Err(format![
+                "from (= {}) cannot be bigger than to (= {})",
+                from, to
+            ]);
+        }
+
+        // TODO
+
+        let generated_string = vec![];
 
         let mut passed_newlines = 0;
 
         for piece in self.table.iter() {
+            passed_newlines += piece.newlines.len();
+
+            let start_index = piece.start_index;
+            let end_index = piece.start_index + piece.length;
+
             let s = match &piece.which {
-                Part::Add => &self.add[piece.start_index..(piece.start_index + piece.length)],
-                Part::Original => {
-                    &self.original[piece.start_index..(piece.start_index + piece.length)]
-                }
+                Part::Add => &self.add[start_index..end_index],
+                Part::Original => &self.original[start_index..end_index],
             };
-            generated_string.push_str(s);
+
+            // generated_string.push();
         }
 
-        generated_string
+        Ok(generated_string)
     }
 
     // split the table at a given index
@@ -77,7 +90,7 @@ impl PieceTable {
                 let p1_len = index - passed_size;
                 let p2_len = (passed_size + piece.length) - index;
 
-                // let split_vec = piece.
+                // TODO
 
                 let part1 = Piece::new(piece.which, piece.start_index, p1_len, vec![]);
                 let part2 = Piece::new(piece.which, piece.start_index + p1_len, p2_len, vec![]);

@@ -8,7 +8,6 @@ use self::piecetable::PieceTable;
 mod piecetable;
 
 pub struct Document {
-    cursor: (u32, u32),
     piece_table: PieceTable,
     file: File,
 }
@@ -29,18 +28,10 @@ impl Document {
 
         let piece_table = PieceTable::new(file_contents);
 
-        Ok(Self {
-            cursor: (0, 0),
-            piece_table,
-            file,
-        })
+        Ok(Self { piece_table, file })
     }
 
-    pub fn get_text(&self) -> String {
-        self.piece_table.generate_string()
-    }
-
-    pub fn get_cursor_pos(&self) -> (u32, u32) {
-        self.cursor
+    pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
+        self.piece_table.generate_string(from, to)
     }
 }
