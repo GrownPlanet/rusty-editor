@@ -26,7 +26,7 @@ impl Frontend {
 
     pub fn run(&mut self) -> Result<(), String> {
         // clear the screen and move to (0, 0)
-        enable_raw_mode().map_err(|e| e.to_string())?;
+        // enable_raw_mode().map_err(|e| e.to_string())?;
 
         execute!(
             self.stdout,
@@ -57,8 +57,10 @@ impl Frontend {
     }
 
     fn draw_text(&mut self) -> Result<(), String> {
-        let terminal_size = terminal::window_size().map_err(|e| e.to_string())?;
-        let text = self.editor.get_text(terminal_size.rows)?;
+        // TODO: hide cursor
+
+        let terminal_size = terminal::size().map_err(|e| e.to_string())?;
+        let text = self.editor.get_text(terminal_size.0)?;
 
         let cursor_pos = self.editor.get_cursor_pos();
         let mut offset = cursor_pos.0;
