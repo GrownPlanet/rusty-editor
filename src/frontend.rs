@@ -25,8 +25,7 @@ impl Frontend {
     }
 
     pub fn run(&mut self) -> Result<(), String> {
-        // clear the screen and move to (0, 0)
-        // enable_raw_mode().map_err(|e| e.to_string())?;
+        enable_raw_mode().map_err(|e| e.to_string())?;
 
         execute!(
             self.stdout,

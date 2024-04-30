@@ -60,14 +60,28 @@ impl PieceTable {
         }
 
         // TODO
+        /*
+
+           0                        3
+        o: [    |          |     |  ]
+           3            5
+        a: [      |..|..]
+           5             7
+        a: [.....|....|..]
+           7     8
+        o: [..|..]
+           8                                    12
+        o: [.....|      |           |      |    ]
+
+        4 - 9
+
+        */
 
         let generated_string = vec![];
 
         let mut passed_newlines = 0;
 
         for piece in self.table.iter() {
-            passed_newlines += piece.newlines.len();
-
             let start_index = piece.start_index;
             let end_index = piece.start_index + piece.length;
 
@@ -77,6 +91,8 @@ impl PieceTable {
             };
 
             // generated_string.push();
+
+            passed_newlines += piece.newlines.len();
         }
 
         Ok(generated_string)
