@@ -5,6 +5,7 @@ use crossterm::{
     event::{read, Event, KeyCode, KeyModifiers},
     execute,
     terminal::{self, disable_raw_mode, enable_raw_mode},
+    ExecutableCommand,
 };
 
 use crate::editor::Editor;
@@ -56,7 +57,9 @@ impl Frontend {
     }
 
     fn draw_text(&mut self) -> Result<(), String> {
-        // TODO: hide cursor
+        self.stdout
+            .execute(cursor::Hide)
+            .map_err(|e| e.to_string())?;
 
         let terminal_size = terminal::size().map_err(|e| e.to_string())?;
         let text = self.editor.get_text(terminal_size.0)?;
@@ -77,6 +80,10 @@ impl Frontend {
         execute!(self.stdout, MoveTo(cursor_pos.0, cursor_pos.1)).map_err(|e| e.to_string())?;
 
         self.stdout.flush().map_err(|e| e.to_string())?;
+
+        self.stdout
+            .execute(cursor::Show)
+            .map_err(|e| e.to_string())?;
 
         Ok(())
     }

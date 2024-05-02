@@ -75,9 +75,36 @@ impl PieceTable {
 
         4 - 9
 
+        gen_str = vec![String::new()];
+
+        pnw = 0;
+
+        for piece in table:
+            if pnw + piece.aonl > from && pnw <= to:
+                let st = piece.start_i;
+                let end = piece.start_i + piece.newlines[0];
+                
+                gen_str[gen_str.len() - 1].push_str(
+                    match &piece.which {
+                        Add => self.add[st..end],
+                        Original => self.original[st..end],
+                    }
+                );
+
+                for i in 0..piece.aonl:
+                    gen_str.push(String::from(
+                        match &piece.which {
+                            Add => self.add[st..end],
+                            Original => self.original[st..end],
+                        }
+                    ));
+            else if pnw > form && pwn <= to: 
+
+            pnw += piece.aonl;
+
         */
 
-        let generated_string = vec![];
+        let generated_string = vec![String::new()];
 
         let mut passed_newlines = 0;
 
