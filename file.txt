@@ -1,6 +1,18 @@
+This is a file to test my editor :D
+
+Hello, World
+
+rust:
 fn main() {
-    println!("Hello, World!");
+  println!("Hello, World!");
 }
 
-  hello??   ..
-..............
+c:
+#include <stdio.h>
+int main() {
+  prinf("Hello, World!\n");
+  return 0;
+}
+
+ocaml:
+print_newline "Hello, World";;

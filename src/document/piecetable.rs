@@ -127,6 +127,17 @@ impl PieceTable {
             passed_newlines = new_newlines;
         }
 
+        let before_last = &strings[strings.len() - 2];
+        if before_last.chars().last().is_some_and(|c| c == '\n') {
+            let _ = strings.pop();
+        }
+
+        if to > strings.len() {
+            for _ in 0..(to - strings.len()) {
+                strings.push(String::from("~"));
+            }
+        }
+
         // fuck this shit
         Ok(strings[from..to].to_owned())
     }

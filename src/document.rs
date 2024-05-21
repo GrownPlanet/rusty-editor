@@ -32,6 +32,6 @@ impl Document {
     }
 
     pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
-        self.piece_table.generate_string(from, to)
+        self.piece_table.gen_string(from, to)
     }
 }
