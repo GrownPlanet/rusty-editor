@@ -1,29 +1,23 @@
-// This could be made faster
-// future reference:
-// https://code.visualstudio.com/blogs/2018/03/23/text-buffer-reimplementation#_boost-line-lookup-by-using-a-balanced-binary-tree
-
 use std::cmp::Ordering;
 
-// is it from the add buffer or the original buffer
-#[derive(Debug, Clone, Copy)]
-enum Part {
-    Add,
+#[derive(Copy, Clone, Debug)]
+enum PieceType {
+    Added,
     Original,
 }
 
-// a single piece from the piece table
 struct Piece {
-    which: Part,
-    start_index: usize,
+    piece_type: PieceType,
+    start: usize,
     length: usize,
     newlines: Vec<usize>,
 }
 
 impl Piece {
-    pub fn new(which: Part, start_index: usize, length: usize, newlines: Vec<usize>) -> Self {
+    pub fn new(piece_type: PieceType, start: usize, length: usize, newlines: Vec<usize>) -> Self {
         Self {
-            which,
-            start_index,
+            piece_type,
+            start,
             length,
             newlines,
         }
@@ -32,116 +26,134 @@ impl Piece {
 
 pub struct PieceTable {
     original: String,
-    add: String,
-    table: Vec<Piece>,
+    added: String,
+    pieces: Vec<Piece>,
 }
 
 impl PieceTable {
-    // create a new table
     pub fn new(string: String) -> Self {
-        let newlines = Self::count_newlines(&string);
+        let mut newlines = count_newlines(&string);
 
-        let piece = Piece::new(Part::Original, 0, string.len(), newlines);
+        // the last line won't be returned if there isn't a newline at the end
+        if string.as_bytes()[string.len() - 1] as char != '\n' {
+            newlines.push(string.len() - 1);
+        }
+
+        let piece = Piece::new(PieceType::Original, 0, string.len(), newlines);
 
         Self {
             original: string,
-            add: String::new(),
-            table: vec![piece],
+            added: String::new(),
+            pieces: vec![piece],
         }
     }
 
-    // generate a string from the table
-    pub fn generate_string(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
+    // TODO:
+    // - add some more error handling
+    // - error handling when to or from is too big
+    pub fn gen_string(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
         if from > to {
             return Err(format![
-                "from (= {}) cannot be bigger than to (= {})",
+                "gen_string: from (= {}) cannot be bigger than to (= {})",
                 from, to
             ]);
         }
 
-        // TODO
-        /*
-
-           0                        3
-        o: [    |          |     |  ]
-           3            5
-        a: [      |..|..]
-           5             7
-        a: [.....|....|..]
-           7     8
-        o: [..|..]
-           8                                    12
-        o: [.....|      |           |      |    ]
-
-        4 - 9
-
-        gen_str = vec![String::new()];
-
-        pnw = 0;
-
-        for piece in table:
-            if pnw + piece.aonl > from && pnw <= to:
-                let st = piece.start_i;
-                let end = piece.start_i + piece.newlines[0];
-                
-                gen_str[gen_str.len() - 1].push_str(
-                    match &piece.which {
-                        Add => self.add[st..end],
-                        Original => self.original[st..end],
-                    }
-                );
-
-                for i in 0..piece.aonl:
-                    gen_str.push(String::from(
-                        match &piece.which {
-                            Add => self.add[st..end],
-                            Original => self.original[st..end],
-                        }
-                    ));
-            else if pnw > form && pwn <= to: 
-
-            pnw += piece.aonl;
-
-        */
-
-        let generated_string = vec![String::new()];
+        let mut strings: Vec<String> = vec![String::new()];
 
         let mut passed_newlines = 0;
 
-        for piece in self.table.iter() {
-            let start_index = piece.start_index;
-            let end_index = piece.start_index + piece.length;
+        for piece in self.pieces.iter() {
+            let new_newlines = passed_newlines + piece.newlines.len();
 
-            let s = match &piece.which {
-                Part::Add => &self.add[start_index..end_index],
-                Part::Original => &self.original[start_index..end_index],
+            // RETURNS TOO EARLY!!!!!
+            /*
+            if new_newlines <= from {
+                passed_newlines = new_newlines;
+                continue;
+            }
+            if passed_newlines >= to {
+                return strings;
+            }
+            */
+
+            let start = if passed_newlines < from && from < new_newlines {
+                from - passed_newlines
+            } else {
+                0
             };
 
-            // generated_string.push();
+            let end = if passed_newlines < to && to < new_newlines {
+                to - passed_newlines
+            } else {
+                piece.newlines.len()
+            };
 
-            passed_newlines += piece.newlines.len();
+            let buf = match piece.piece_type {
+                PieceType::Added => &self.added,
+                PieceType::Original => &self.original,
+            };
+
+            let i = strings.len() - 1;
+
+            let mut to_push = match start {
+                0 => {
+                    &buf[piece.start
+                        ..(piece.start + maybe_get(&piece.newlines, start).unwrap_or(piece.length))]
+                }
+                _ => &buf[piece.newlines[start - 1]..(piece.start + piece.newlines[start])],
+            };
+
+            strings[i].push_str(to_push);
+
+            for i in (start + 1)..end {
+                to_push =
+                    &buf[piece.start + piece.newlines[i - 1]..(piece.start + piece.newlines[i])];
+                strings.push(to_push.to_string());
+            }
+
+            if !piece.newlines.is_empty()
+                && piece.newlines[piece.newlines.len() - 1] != piece.length
+            {
+                to_push = &buf[(piece.start + piece.newlines[piece.newlines.len() - 1])
+                    ..(piece.start + piece.length)];
+                strings.push(to_push.to_string());
+            }
+
+            if to_push.ends_with('\n') {
+                strings.push(String::new());
+            }
+
+            passed_newlines = new_newlines;
         }
 
-        Ok(generated_string)
+        // fuck this shit
+        Ok(strings[from..to].to_owned())
     }
 
-    // split the table at a given index
     fn split_at(&mut self, index: usize) -> Result<usize, String> {
         let mut passed_size = 0;
-        for (i, piece) in self.table.iter().enumerate() {
-            if index > passed_size && index < passed_size + piece.length {
+
+        for (i, piece) in self.pieces.iter().enumerate() {
+            if passed_size < index && index < passed_size + piece.length {
+                let buf = match piece.piece_type {
+                    PieceType::Added => &self.added,
+                    PieceType::Original => &self.original,
+                };
+
                 let p1_len = index - passed_size;
-                let p2_len = (passed_size + piece.length) - index;
+                let p1_newlines = count_newlines(&buf[piece.start..(piece.start + p1_len)]);
+                let p1 = Piece::new(piece.piece_type, piece.start, p1_len, p1_newlines);
 
-                // TODO
+                let p2_len = passed_size + piece.length - index;
+                let p2_newlines =
+                    count_newlines(&buf[(piece.start + p1_len)..(piece.start + p1_len + p2_len)]);
+                let p2 = Piece::new(piece.piece_type, piece.start + p1_len, p2_len, p2_newlines);
 
-                let part1 = Piece::new(piece.which, piece.start_index, p1_len, vec![]);
-                let part2 = Piece::new(piece.which, piece.start_index + p1_len, p2_len, vec![]);
+                self.pieces[i] = p1;
+                self.pieces.insert(i + 1, p2);
 
-                self.table[i] = part1;
-                self.table.insert(i + 1, part2);
-
-                return Ok(i + 1); // plus one because we need to insert there
+                return Ok(i + 1);
             } else if index == passed_size {
                 return Ok(i);
             } else if index == passed_size + piece.length {
@@ -150,24 +162,34 @@ impl PieceTable {
             passed_size += piece.length;
         }
 
-        Err(String::from("split_at failed!"))
+        println!("SPLIT AT: index = {}", index);
+        self._print_table();
+
+        Err(String::from("`split_at` failed!"))
     }
 
-    // insert a string at a given index
-    pub fn insert(&mut self, index: usize, string: &str) -> Result<(), String> {
-        let start_index = self.add.len();
+    pub fn len(&self) -> usize {
+        let mut len = 0;
+        for p in &self.pieces {
+            len += p.length
+        }
+        len
+    }
 
-        self.add.push_str(string);
+    pub fn insert(&mut self, index: usize, string: &str) -> Result<(), String> {
+        let start_index = self.added.len();
+        let newlines = count_newlines(string);
+
+        self.added.push_str(string);
+
         let i = self.split_at(index)?;
 
-        let newlines = Self::count_newlines(string);
-
-        self.table.insert(
+        self.pieces.insert(
             i,
             Piece::new(
-                Part::Add,
+                PieceType::Added,
                 start_index,
-                self.add.len() - start_index,
+                self.added.len() - start_index,
                 newlines,
             ),
         );
@@ -175,75 +197,90 @@ impl PieceTable {
         Ok(())
     }
 
-    // for debugging purposes
-    pub fn _print_table(&self) {
-        println!("which - start_index - lenght");
-        println!("----------------------------");
-        for piece in self.table.iter() {
-            println!(
-                "{:?} - {} - {}",
-                piece.which, piece.start_index, piece.length
-            );
-        }
-        println!("----------------------------");
-    }
-
-    // delete a char at a given index
     pub fn delete(&mut self, index: usize) -> Result<(), String> {
         let i = self.split_at(index)?;
 
-        self.table[i].length -= 1;
-        self.table[i].start_index += 1;
+        let piece = &mut self.pieces[i];
+
+        piece.length -= 1;
+        piece.start += 1;
+
+        // could be done smarter?
+        let s = match piece.piece_type {
+            PieceType::Added => &self.added[piece.start..(piece.start + piece.length)],
+            PieceType::Original => &self.original[piece.start..(piece.start + piece.length)],
+        };
+
+        let newlines = count_newlines(s);
+
+        piece.newlines = newlines;
 
         Ok(())
     }
 
-    // delete a range of chars
     pub fn delete_range(&mut self, from: usize, to: usize) -> Result<(), String> {
         if from > to {
             return Err(format![
-                "from (= {}) cannot be bigger than to (= {})",
+                "delete_range: from (= {}) cannot be bigger than to (= {})",
                 from, to
             ]);
         }
 
         let i = self.split_at(to)? - 1;
-        let l = to - from;
 
-        match self.table[i].length.cmp(&l) {
-            Ordering::Less => {
-                self.table[i].length -= l;
+        self._print_table();
+
+        let leng = to - from;
+
+        match self.pieces[i].length.cmp(&leng) {
+            Ordering::Greater => {
+                self.pieces[i].length -= leng;
             }
             Ordering::Equal => {
-                self.table.remove(i);
+                self.pieces.remove(i);
             }
-            Ordering::Greater => {
-                self.table.remove(i);
-                self.delete_range(from, to - self.table[i].length)?;
+            Ordering::Less => {
+                self.pieces.remove(i - 1);
+
+                let len_before = (0..i).fold(0, |acc, x| acc + self.pieces[x].length);
+
+                self.delete_range(from, to - len_before)?;
             }
         }
 
         Ok(())
     }
 
-    // get the lenght of the piece table
-    pub fn len(&self) -> usize {
-        let mut len = 0;
-        for piece in self.table.iter() {
-            len += piece.length;
+    fn _print_table(&self) {
+        println!("orignal buffer : {:?}", self.original);
+        println!("added buffer   : {:?}", self.added);
+
+        println!();
+
+        println!("which - start_index - lenght - newlines");
+        println!("---------------------------------------");
+        for piece in self.pieces.iter() {
+            println!(
+                "{:?} - {} - {} - {:?}",
+                piece.piece_type, piece.start, piece.length, piece.newlines,
+            );
         }
-        len
+        println!("---------------------------------------");
     }
+}
 
-    fn count_newlines(string: &str) -> Vec<usize> {
-        let mut newlines = vec![];
+fn count_newlines(string: &str) -> Vec<usize> {
+    string
+        .chars()
+        .enumerate()
+        .filter(|(_, c)| *c == '\n')
+        .map(|(i, _)| i + 1)
+        .collect()
+}
 
-        for (i, c) in string.chars().enumerate() {
-            if c == '\n' {
-                newlines.push(i);
-            }
-        }
-
-        newlines
+fn maybe_get<T: Copy>(arr: &[T], i: usize) -> Option<T> {
+    if i >= arr.len() {
+        return None;
     }
+    Some(arr[i])
 }
