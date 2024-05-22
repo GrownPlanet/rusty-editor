@@ -2,6 +2,13 @@ use std::process::exit;
 
 use crate::{document::Document, frontend::Frontend};
 
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 pub struct Editor {
     document: Document,
     cursor_pos: (u16, u16),
@@ -32,7 +39,7 @@ impl Editor {
 
     // TODO: optimize this function so it only gets the text that fits on screen
     pub fn get_text(&self, terminal_height: u16) -> Result<Vec<String>, String> {
-        let from = self.scroll_off + self.cursor_pos.0;
+        let from = self.scroll_off;
         let to = from + terminal_height;
 
         self.document.get_text(from as usize, to as usize)
@@ -40,5 +47,17 @@ impl Editor {
 
     pub fn get_cursor_pos(&self) -> (u16, u16) {
         self.cursor_pos
+    }
+
+    pub fn move_cursor(&mut self, direction: Direction) {
+        // moving the cursor
+        match direction {
+            Direction::Up => self.cursor_pos.1 -= 1,
+            Direction::Down => self.cursor_pos.1 += 1,
+            Direction::Left => self.cursor_pos.0 -= 1,
+            Direction::Right => self.cursor_pos.0 += 1,
+        }
+
+        // clamping the position
     }
 }
