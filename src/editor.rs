@@ -42,22 +42,24 @@ impl Editor {
         let from = self.scroll_off;
         let to = from + terminal_height;
 
-        self.document.get_text(from as usize, to as usize)
+        self.document.get_text(0, to as usize)
     }
 
     pub fn get_cursor_pos(&self) -> (u16, u16) {
         self.cursor_pos
     }
 
-    pub fn move_cursor(&mut self, direction: Direction) {
+    pub fn move_cursor(&mut self, direction: Direction, terminal_height: u16) {
         // moving the cursor
         match direction {
-            Direction::Up => self.cursor_pos.1 -= 1,
+            Direction::Up => self.cursor_pos.1 = self.cursor_pos.1.saturating_sub(1),
             Direction::Down => self.cursor_pos.1 += 1,
-            Direction::Left => self.cursor_pos.0 -= 1,
+            Direction::Left => self.cursor_pos.0 = self.cursor_pos.0.saturating_sub(1),
             Direction::Right => self.cursor_pos.0 += 1,
         }
 
         // clamping the position
+        let max = std::cmp::min(terminal_height, self.document.len() as u16 - self.scroll_off);
+        self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
     }
 }

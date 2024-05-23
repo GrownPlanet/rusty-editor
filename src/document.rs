@@ -34,4 +34,8 @@ impl Document {
     pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
         self.piece_table.gen_string(from, to)
     }
+
+    pub fn len(&self) -> usize {
+        self.piece_table.len()
+    }
 }

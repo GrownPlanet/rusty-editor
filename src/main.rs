@@ -27,7 +27,6 @@ fn main() {
     let editor = match Editor::new(&args[1]) {
         Ok(e) => e,
         Err(m) => {
-            frontend::clean_up();
             println!("Error creating editor: {}", m);
             exit(-1);
         }
