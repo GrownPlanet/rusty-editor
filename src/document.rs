@@ -36,6 +36,6 @@ impl Document {
     }
 
     pub fn len(&self) -> usize {
-        self.piece_table.len()
+        self.piece_table.newlines()
     }
 }

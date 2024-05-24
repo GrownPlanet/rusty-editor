@@ -179,12 +179,20 @@ impl PieceTable {
         Err(String::from("`split_at` failed!"))
     }
 
-    pub fn len(&self) -> usize {
+    pub fn _len(&self) -> usize {
         let mut len = 0;
         for p in &self.pieces {
             len += p.length
         }
         len
+    }
+
+    pub fn newlines(&self) -> usize {
+        let mut newlines = 0;
+        for p in &self.pieces {
+            newlines += p.newlines.len()
+        }
+        newlines
     }
 
     pub fn insert(&mut self, index: usize, string: &str) -> Result<(), String> {
@@ -278,6 +286,11 @@ impl PieceTable {
         }
         println!("---------------------------------------");
     }
+
+    fn get_line_length(line: usize) -> usize {
+        todo!();
+    }
+
 }
 
 fn count_newlines(string: &str) -> Vec<usize> {

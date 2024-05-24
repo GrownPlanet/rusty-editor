@@ -59,7 +59,10 @@ impl Editor {
         }
 
         // clamping the position
-        let max = std::cmp::min(terminal_height, self.document.len() as u16 - self.scroll_off);
+        let max = std::cmp::min(terminal_height - 1, self.document.len() as u16 - self.scroll_off - 1);
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
+
+        let max = ;
+        self.cursor_pos.0 = self.cursor_pos.1.clamp(0, max);
     }
 }
