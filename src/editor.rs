@@ -1,6 +1,6 @@
-use std::process::exit;
+use std::{process::exit, usize};
 
-use crate::{document::Document, frontend::Frontend};
+use crate::{document::{self, Document}, frontend::Frontend};
 
 pub enum Direction {
     Up,
@@ -62,7 +62,7 @@ impl Editor {
         let max = std::cmp::min(terminal_height - 1, self.document.len() as u16 - self.scroll_off - 1);
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
 
-        let max = ;
+        let max = self.document.line_len(self.cursor_pos.1 as usize) as u16;
         self.cursor_pos.0 = self.cursor_pos.1.clamp(0, max);
     }
 }

@@ -38,4 +38,8 @@ impl Document {
     pub fn len(&self) -> usize {
         self.piece_table.newlines()
     }
+
+    pub fn line_len(&self, line: usize) -> usize {
+        self.piece_table.get_line_length(line)
+    }
 }

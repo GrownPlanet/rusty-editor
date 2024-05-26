@@ -287,7 +287,29 @@ impl PieceTable {
         println!("---------------------------------------");
     }
 
-    fn get_line_length(line: usize) -> usize {
+
+    pub fn get_line_length(&self, line: usize) -> usize {
+        let mut passed_newlines = 0;
+        let mut len = 0;
+
+        for piece in self.pieces.iter() {
+            let buf = match piece.piece_type {
+                PieceType::Added => &self.added,
+                PieceType::Original => &self.original,
+            };
+
+            for (i, subpart) in piece.newlines.iter().enumerate() {
+                let start = match i {
+                    0 => piece.length,
+                    _ => piece.newlines[i - 1],
+                };
+
+                passed_newlines += 1;
+            }
+
+            let start = piece.newlines.last().unwrap_or(&0);
+        }
+
         todo!();
     }
 
