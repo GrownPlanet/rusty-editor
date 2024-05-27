@@ -1,6 +1,9 @@
 use std::{process::exit, usize};
 
-use crate::{document::{self, Document}, frontend::Frontend};
+use crate::{
+    document::Document,
+    frontend::Frontend,
+};
 
 pub enum Direction {
     Up,
@@ -28,15 +31,6 @@ impl Editor {
         })
     }
 
-    pub fn run(self) {
-        let mut frontend = Frontend::new(self);
-
-        if let Err(s) = frontend.run() {
-            println!("Error: {}", s);
-            exit(-1);
-        }
-    }
-
     // TODO: optimize this function so it only gets the text that fits on screen
     pub fn get_text(&self, terminal_height: u16) -> Result<Vec<String>, String> {
         let from = self.scroll_off;
@@ -59,10 +53,17 @@ impl Editor {
         }
 
         // clamping the position
-        let max = std::cmp::min(terminal_height - 1, self.document.len() as u16 - self.scroll_off - 1);
+        let max = std::cmp::min(
+            terminal_height - 1,
+            self.document.len() as u16 - self.scroll_off - 1,
+        );
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
 
         let max = self.document.line_len(self.cursor_pos.1 as usize) as u16;
         self.cursor_pos.0 = self.cursor_pos.0.clamp(0, max);
+    }
+
+    pub fn insert(&self, ch: char) {
+
     }
 }

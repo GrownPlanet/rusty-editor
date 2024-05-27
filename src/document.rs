@@ -42,4 +42,8 @@ impl Document {
     pub fn line_len(&self, line: usize) -> usize {
         self.piece_table.get_line_length(line)
     }
+
+    pub fn insert(&self, nth: usize, line:  usize) {
+        // self.piece_table.insert(index, string)
+    }
 }

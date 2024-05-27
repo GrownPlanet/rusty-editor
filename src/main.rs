@@ -11,6 +11,7 @@
 use std::{env, process::exit};
 
 use editor::Editor;
+use frontend::Frontend;
 
 mod document;
 mod editor;
@@ -32,5 +33,7 @@ fn main() {
         }
     };
 
-    editor.run();
+    let mut frontend = Frontend::new(editor);
+
+    frontend.run().unwrap();
 }

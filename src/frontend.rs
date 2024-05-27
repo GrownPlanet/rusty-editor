@@ -70,6 +70,10 @@ impl Frontend {
                     (KeyModifiers::NONE, KeyCode::Left)  => self.editor.move_cursor(editor::Direction::Left, terminal_height),
                     #[rustfmt::skip]
                     (KeyModifiers::NONE, KeyCode::Right) => self.editor.move_cursor(editor::Direction::Right, terminal_height),
+                    (KeyModifiers::NONE, KeyCode::Char(c)) |
+                    (KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                        self.editor.insert(c);
+                    }
                     _ => self.input_pressed = false,
                 }
             }
