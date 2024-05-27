@@ -39,6 +39,7 @@ impl Frontend {
         self.draw_text()?;
         while self.running {
             self.handle_input().map_err(|e| e.to_string())?;
+
             if self.input_pressed {
                 self.draw_text()?;
             }

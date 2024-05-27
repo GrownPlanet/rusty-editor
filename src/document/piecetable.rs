@@ -270,6 +270,37 @@ impl PieceTable {
         Ok(())
     }
 
+    pub fn get_line_length(&self, line: usize) -> usize {
+        let mut passed_newlines = 0;
+        let mut len = 0;
+
+        for piece in self.pieces.iter() {
+            for (i, subpart) in piece.newlines.iter().enumerate() {
+                let start = match i {
+                    0 => 0,
+                    _ => piece.newlines[i - 1],
+                };
+
+                len += subpart - start;
+                passed_newlines += 1;
+
+                if passed_newlines == line + 1 {
+                    return len - 1;
+                } else {
+                    len = 0;
+                }
+            }
+
+            let start = piece.newlines.last().unwrap_or(&0);
+            if start + 1 >= piece.length {
+                continue;
+            }
+            len += piece.length - start;
+        }
+
+        len - 1
+    }
+
     fn _print_table(&self) {
         println!("orignal buffer : {:?}", self.original);
         println!("added buffer   : {:?}", self.added);
@@ -286,33 +317,6 @@ impl PieceTable {
         }
         println!("---------------------------------------");
     }
-
-
-    pub fn get_line_length(&self, line: usize) -> usize {
-        let mut passed_newlines = 0;
-        let mut len = 0;
-
-        for piece in self.pieces.iter() {
-            let buf = match piece.piece_type {
-                PieceType::Added => &self.added,
-                PieceType::Original => &self.original,
-            };
-
-            for (i, subpart) in piece.newlines.iter().enumerate() {
-                let start = match i {
-                    0 => piece.length,
-                    _ => piece.newlines[i - 1],
-                };
-
-                passed_newlines += 1;
-            }
-
-            let start = piece.newlines.last().unwrap_or(&0);
-        }
-
-        todo!();
-    }
-
 }
 
 fn count_newlines(string: &str) -> Vec<usize> {

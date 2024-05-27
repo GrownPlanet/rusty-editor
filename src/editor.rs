@@ -63,6 +63,6 @@ impl Editor {
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
 
         let max = self.document.line_len(self.cursor_pos.1 as usize) as u16;
-        self.cursor_pos.0 = self.cursor_pos.1.clamp(0, max);
+        self.cursor_pos.0 = self.cursor_pos.0.clamp(0, max);
     }
 }
