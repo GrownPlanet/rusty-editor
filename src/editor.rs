@@ -67,4 +67,39 @@ impl Editor {
 
         Ok(())
     }
+
+    pub fn insert_newline(&mut self) -> Result<(), String> {
+        self.document
+            .insert('\n', self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+
+        self.cursor_pos.1 += 1;
+        self.cursor_pos.0 = 0;
+
+        Ok(())
+    }
+
+    // TODO: fix this shit
+    pub fn delete(&mut self) -> Result<(), String> {
+        if self.cursor_pos.0 == 0 {
+            if self.cursor_pos.1 == 0 {
+                return Ok(());
+            }
+            
+            self.cursor_pos.1 -= 1;
+            self.cursor_pos.0 = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;
+
+            self.document
+                .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+
+            return Ok(())
+
+        }
+
+        self.cursor_pos.0 -= 1;
+
+        self.document
+            .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+
+        Ok(())
+    }
 }

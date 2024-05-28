@@ -21,7 +21,7 @@ impl Document {
             let file = File::open(path).map_err(|e| e.to_string())?;
             (content, file)
         } else {
-            let content = String::new();
+            let content = String::from("\n");
             let file = File::create(path).map_err(|e| e.to_string())?;
             (content, file)
         };
@@ -46,6 +46,13 @@ impl Document {
     pub fn insert(&mut self, ch: char, nth: usize, line: usize) -> Result<(), String> {
         let absolute_pos = self.piece_table.get_absolute_pos(nth, line);
         self.piece_table.insert(absolute_pos, &ch.to_string())?;
+
+        Ok(())
+    }
+    
+    pub fn delete(&mut self, nth: usize, line: usize) -> Result<(), String> {
+        let absolute_pos = self.piece_table.get_absolute_pos(nth, line);
+        self.piece_table.delete(absolute_pos)?;
 
         Ok(())
     }

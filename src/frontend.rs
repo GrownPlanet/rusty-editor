@@ -4,7 +4,7 @@ use crossterm::{
     cursor::{self, MoveTo},
     event::{read, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute,
-    terminal::{self, disable_raw_mode, enable_raw_mode},
+    terminal::{self, disable_raw_mode, enable_raw_mode, Clear, ClearType},
 };
 
 use crate::editor::{self, Editor};
@@ -73,6 +73,11 @@ impl Frontend {
                     | (KeyModifiers::SHIFT, KeyCode::Char(c)) => {
                         self.editor.insert(c)?;
                     }
+                    (KeyModifiers::NONE, KeyCode::Enter)
+                    | (KeyModifiers::SHIFT, KeyCode::Enter) => self.editor.insert_newline()?,
+                    // TODO: add shift-delete
+                    (KeyModifiers::NONE, KeyCode::Backspace)
+                    | (KeyModifiers::SHIFT, KeyCode::Backspace) => self.editor.delete()?,
                     _ => self.input_pressed = false,
                 }
             }
@@ -82,7 +87,13 @@ impl Frontend {
     }
 
     fn draw_text(&mut self) -> Result<(), String> {
-        execute!(self.stdout, cursor::Hide, cursor::MoveTo(0, 0),).map_err(|e| e.to_string())?;
+        execute!(
+            self.stdout,
+            cursor::Hide,
+            cursor::MoveTo(0, 0),
+            Clear(ClearType::All)
+        )
+        .map_err(|e| e.to_string())?;
 
         let terminal_size = terminal::size().map_err(|e| e.to_string())?;
         let text = self.editor.get_text(terminal_size.1)?;
@@ -91,14 +102,10 @@ impl Frontend {
             self.stdout
                 .write_all(row.as_bytes())
                 .map_err(|e| e.to_string())?;
-            // print!("{}", row);
-
-            // std::thread::sleep(std::time::Duration::from_millis(50));
 
             execute!(self.stdout, MoveTo(0, offset as u16 + 1)).map_err(|e| e.to_string())?;
-
-            // std::thread::sleep(std::time::Duration::from_millis(50));
         }
+
         let cursor_pos = self.editor.get_cursor_pos();
 
         self.stdout.flush().map_err(|e| e.to_string())?;
