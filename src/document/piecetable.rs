@@ -275,30 +275,78 @@ impl PieceTable {
         let mut len = 0;
 
         for piece in self.pieces.iter() {
-            for (i, subpart) in piece.newlines.iter().enumerate() {
+            for (i, newline_pos) in piece.newlines.iter().enumerate() {
                 let start = match i {
                     0 => 0,
                     _ => piece.newlines[i - 1],
                 };
 
-                len += subpart - start;
-                passed_newlines += 1;
+                len += newline_pos - start;
 
-                if passed_newlines == line + 1 {
-                    return len - 1;
+                if passed_newlines == line {
+                    return len;
                 } else {
                     len = 0;
                 }
+
+                passed_newlines += 1;
             }
 
             let start = piece.newlines.last().unwrap_or(&0);
-            if start + 1 >= piece.length {
+
+            if *start >= piece.length {
                 continue;
             }
+
             len += piece.length - start;
         }
 
-        len - 1
+        len
+    }
+
+    pub fn get_absolute_pos(&self, nth: usize, line: usize) -> usize {
+        let mut absolute_pos = nth;
+        let mut temp_absolute_pos = nth;
+
+        let mut passed_newlines = 0;
+
+        for piece in self.pieces.iter() {
+            for (i, newline_pos) in piece.newlines.iter().enumerate() {
+                let start = match i {
+                    0 => 0,
+                    _ => piece.newlines[i - 1],
+                };
+
+                if passed_newlines == line {
+                    return absolute_pos;
+                }
+
+                absolute_pos = temp_absolute_pos;
+                absolute_pos += newline_pos - start;
+                temp_absolute_pos = absolute_pos;
+                passed_newlines += 1;
+            }
+
+            let start = piece.newlines.last().unwrap_or(&0);
+
+            if *start >= piece.length {
+                continue;
+            }
+
+            temp_absolute_pos += piece.length - start;
+        }
+
+        return usize::MAX;
+        // absolute_pos
+
+        /*
+        * why dis work??
+        let mut absolute_pos = nth;
+        for i in 0..line {
+            absolute_pos += self.get_line_length(i);
+        }
+        absolute_pos
+        */
     }
 
     fn _print_table(&self) {

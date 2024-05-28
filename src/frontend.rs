@@ -52,13 +52,12 @@ impl Frontend {
         Ok(())
     }
 
-    fn handle_input(&mut self) -> std::io::Result<()> {
+    fn handle_input(&mut self) -> Result<(), String> {
         self.input_pressed = true;
 
+        let terminal_height = terminal::size().map_err(|e| e.to_string())?.1;
 
-        let terminal_height = terminal::size()?.1;
-
-        if let Event::Key(key) = read()? {
+        if let Event::Key(key) = read().map_err(|e| e.to_string())? {
             if key.kind != KeyEventKind::Release {
                 match (key.modifiers, key.code) {
                     (KeyModifiers::CONTROL, KeyCode::Char('c')) => self.running = false,
@@ -70,9 +69,9 @@ impl Frontend {
                     (KeyModifiers::NONE, KeyCode::Left)  => self.editor.move_cursor(editor::Direction::Left, terminal_height),
                     #[rustfmt::skip]
                     (KeyModifiers::NONE, KeyCode::Right) => self.editor.move_cursor(editor::Direction::Right, terminal_height),
-                    (KeyModifiers::NONE, KeyCode::Char(c)) |
-                    (KeyModifiers::SHIFT, KeyCode::Char(c)) => {
-                        self.editor.insert(c);
+                    (KeyModifiers::NONE, KeyCode::Char(c))
+                    | (KeyModifiers::SHIFT, KeyCode::Char(c)) => {
+                        self.editor.insert(c)?;
                     }
                     _ => self.input_pressed = false,
                 }

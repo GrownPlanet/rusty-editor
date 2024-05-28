@@ -1,9 +1,4 @@
-use std::{process::exit, usize};
-
-use crate::{
-    document::Document,
-    frontend::Frontend,
-};
+use crate::document::Document;
 
 pub enum Direction {
     Up,
@@ -59,11 +54,17 @@ impl Editor {
         );
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
 
-        let max = self.document.line_len(self.cursor_pos.1 as usize) as u16;
+        // `- 1` because we don't want to insert after the newline
+        let max = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;
         self.cursor_pos.0 = self.cursor_pos.0.clamp(0, max);
     }
 
-    pub fn insert(&self, ch: char) {
+    pub fn insert(&mut self, ch: char) -> Result<(), String> {
+        self.document
+            .insert(ch, self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
 
+        self.cursor_pos.0 += 1;
+
+        Ok(())
     }
 }

@@ -43,7 +43,10 @@ impl Document {
         self.piece_table.get_line_length(line)
     }
 
-    pub fn insert(&self, nth: usize, line:  usize) {
-        // self.piece_table.insert(index, string)
+    pub fn insert(&mut self, ch: char, nth: usize, line: usize) -> Result<(), String> {
+        let absolute_pos = self.piece_table.get_absolute_pos(nth, line);
+        self.piece_table.insert(absolute_pos, &ch.to_string())?;
+
+        Ok(())
     }
 }
