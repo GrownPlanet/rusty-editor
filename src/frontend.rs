@@ -4,7 +4,7 @@ use crossterm::{
     cursor::{self, MoveTo},
     event::{read, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute,
-    terminal::{self, disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    terminal::{self, disable_raw_mode, enable_raw_mode, Clear, ClearType}, ExecutableCommand,
 };
 
 use crate::editor::{self, Editor};
@@ -91,7 +91,6 @@ impl Frontend {
             self.stdout,
             cursor::Hide,
             cursor::MoveTo(0, 0),
-            Clear(ClearType::All)
         )
         .map_err(|e| e.to_string())?;
 
@@ -99,6 +98,8 @@ impl Frontend {
         let text = self.editor.get_text(terminal_size.1)?;
 
         for (offset, row) in text.iter().enumerate() {
+            self.stdout.execute(Clear(ClearType::CurrentLine)).map_err(|e| e.to_string())?;
+
             self.stdout
                 .write_all(row.as_bytes())
                 .map_err(|e| e.to_string())?;

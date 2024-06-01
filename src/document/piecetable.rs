@@ -1,3 +1,8 @@
+// DO NOT TOUCH THIS FILE UNKLESS IT IS ABSOLUTELY NECESARRY
+// IT IS CURSED WITH BAD CODE
+// STAY AWAY
+// IT'S FOR YOUR OWN SAFETY
+
 use std::cmp::Ordering;
 
 #[derive(Copy, Clone, Debug)]
