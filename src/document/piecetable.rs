@@ -147,6 +147,48 @@ impl PieceTable {
         Ok(strings[from..to].to_owned())
     }
 
+    pub fn gen_whole_string(&self) -> String {
+        let mut string = String::new();
+
+        let mut passed_newlines = 0;
+
+        for piece in self.pieces.iter() {
+            let new_newlines = passed_newlines + piece.newlines.len();
+            let end = piece.newlines.len();
+
+            let buf = match piece.piece_type {
+                PieceType::Added => &self.added,
+                PieceType::Original => &self.original,
+            };
+
+            let mut to_push = &buf[piece.start ..(piece.start + maybe_get(&piece.newlines, 0).unwrap_or(piece.length))] ;
+
+            string.push_str(to_push);
+
+            for i in 1..end {
+                to_push =
+                    &buf[piece.start + piece.newlines[i - 1]..(piece.start + piece.newlines[i])];
+                string.push_str(to_push);
+            }
+
+            if !piece.newlines.is_empty()
+                && piece.newlines[piece.newlines.len() - 1] != piece.length
+            {
+                to_push = &buf[(piece.start + piece.newlines[piece.newlines.len() - 1])
+                    ..(piece.start + piece.length)];
+                string.push_str(to_push);
+            }
+
+            if to_push.ends_with('\n') {
+                string.push_str("");
+            }
+
+            passed_newlines = new_newlines;
+        }
+
+        string
+    }
+
     fn split_at(&mut self, index: usize) -> Result<usize, String> {
         let mut passed_size = 0;
 
@@ -163,7 +205,7 @@ impl PieceTable {
 
                 let p2_len = passed_size + piece.length - index;
                 let p2_newlines =
-                    count_newlines(&buf[(piece.start + p1_len)..(piece.start + p1_len + p2_len)]);
+                count_newlines(&buf[(piece.start + p1_len)..(piece.start + p1_len + p2_len)]);
                 let p2 = Piece::new(piece.piece_type, piece.start + p1_len, p2_len, p2_newlines);
 
                 self.pieces[i] = p1;
@@ -348,7 +390,7 @@ impl PieceTable {
         * why dis work??
         let mut absolute_pos = nth;
         for i in 0..line {
-            absolute_pos += self.get_line_length(i);
+        absolute_pos += self.get_line_length(i);
         }
         absolute_pos
         */

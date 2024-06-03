@@ -4,7 +4,8 @@ use crossterm::{
     cursor::{self, MoveTo},
     event::{read, Event, KeyCode, KeyEventKind, KeyModifiers},
     execute,
-    terminal::{self, disable_raw_mode, enable_raw_mode, Clear, ClearType}, ExecutableCommand,
+    terminal::{self, disable_raw_mode, enable_raw_mode, Clear, ClearType},
+    ExecutableCommand,
 };
 
 use crate::editor::{self, Editor};
@@ -60,7 +61,7 @@ impl Frontend {
         if let Event::Key(key) = read().map_err(|e| e.to_string())? {
             if key.kind != KeyEventKind::Release {
                 match (key.modifiers, key.code) {
-                    (KeyModifiers::CONTROL, KeyCode::Char('c')) => self.running = false,
+                    (KeyModifiers::CONTROL, KeyCode::Char('x')) => self.running = false,
                     #[rustfmt::skip]
                     (KeyModifiers::NONE, KeyCode::Up)    => self.editor.move_cursor(editor::Direction::Up, terminal_height),
                     #[rustfmt::skip]
@@ -75,9 +76,10 @@ impl Frontend {
                     }
                     (KeyModifiers::NONE, KeyCode::Enter)
                     | (KeyModifiers::SHIFT, KeyCode::Enter) => self.editor.insert_newline()?,
-                    // TODO: add shift-delete
+                    // TODO: add ctrl-delete
                     (KeyModifiers::NONE, KeyCode::Backspace)
                     | (KeyModifiers::SHIFT, KeyCode::Backspace) => self.editor.delete()?,
+                    (KeyModifiers::CONTROL, KeyCode::Char('s')) => self.editor.save()?,
                     _ => self.input_pressed = false,
                 }
             }
@@ -87,18 +89,15 @@ impl Frontend {
     }
 
     fn draw_text(&mut self) -> Result<(), String> {
-        execute!(
-            self.stdout,
-            cursor::Hide,
-            cursor::MoveTo(0, 0),
-        )
-        .map_err(|e| e.to_string())?;
+        execute!(self.stdout, cursor::Hide, cursor::MoveTo(0, 0),).map_err(|e| e.to_string())?;
 
         let terminal_size = terminal::size().map_err(|e| e.to_string())?;
         let text = self.editor.get_text(terminal_size.1)?;
 
         for (offset, row) in text.iter().enumerate() {
-            self.stdout.execute(Clear(ClearType::CurrentLine)).map_err(|e| e.to_string())?;
+            self.stdout
+                .execute(Clear(ClearType::CurrentLine))
+                .map_err(|e| e.to_string())?;
 
             self.stdout
                 .write_all(row.as_bytes())

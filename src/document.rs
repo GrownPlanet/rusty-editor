@@ -1,5 +1,6 @@
 use std::{
     fs::{self, File},
+    io::Write,
     path::Path,
 };
 
@@ -18,7 +19,8 @@ impl Document {
 
         let (file_contents, file) = if path.exists() {
             let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
-            let file = File::open(path).map_err(|e| e.to_string())?;
+            // TODO: don't delete the file when just opening it :/
+            let file = File::create(path).map_err(|e| e.to_string())?;
             (content, file)
         } else {
             let content = String::from("\n");
@@ -49,11 +51,24 @@ impl Document {
 
         Ok(())
     }
-    
+
     pub fn delete(&mut self, nth: usize, line: usize) -> Result<(), String> {
         let absolute_pos = self.piece_table.get_absolute_pos(nth, line);
         self.piece_table.delete(absolute_pos)?;
 
+        Ok(())
+    }
+
+    pub fn save(&mut self) -> Result<(), String> {
+        // clear the file before writing to it again
+        self.file.set_len(0).map_err(|e| e.to_string())?;
+
+        let string = self
+            .piece_table
+            .gen_whole_string();
+
+        self.file.write_all(&string.as_bytes()).map_err(|e| e.to_string())?;
+        
         Ok(())
     }
 }

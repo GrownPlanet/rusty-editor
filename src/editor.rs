@@ -84,21 +84,26 @@ impl Editor {
             if self.cursor_pos.1 == 0 {
                 return Ok(());
             }
-            
+
             self.cursor_pos.1 -= 1;
             self.cursor_pos.0 = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;
 
             self.document
                 .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
 
-            return Ok(())
-
+            return Ok(());
         }
 
         self.cursor_pos.0 -= 1;
 
         self.document
             .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+
+        Ok(())
+    }
+
+    pub fn save(&mut self) -> Result<(), String> {
+        self.document.save()?;
 
         Ok(())
     }
