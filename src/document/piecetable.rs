@@ -5,6 +5,8 @@
 
 use std::cmp::Ordering;
 
+use unicode_segmentation::UnicodeSegmentation;
+
 #[derive(Copy, Clone, Debug)]
 enum PieceType {
     Added,
@@ -150,17 +152,15 @@ impl PieceTable {
     pub fn gen_whole_string(&self) -> String {
         let mut string = String::new();
 
-        let mut passed_newlines = 0;
-
         for piece in self.pieces.iter() {
-            let new_newlines = passed_newlines + piece.newlines.len();
-            let end = piece.newlines.len();
-
             let buf = match piece.piece_type {
                 PieceType::Added => &self.added,
                 PieceType::Original => &self.original,
             };
 
+            string.push_str(&buf[piece.start..(piece.start + piece.length)]);
+
+            /*
             let mut to_push = &buf[piece.start ..(piece.start + maybe_get(&piece.newlines, 0).unwrap_or(piece.length))] ;
 
             string.push_str(to_push);
@@ -182,8 +182,7 @@ impl PieceTable {
             if to_push.ends_with('\n') {
                 string.push_str("");
             }
-
-            passed_newlines = new_newlines;
+            */
         }
 
         string
@@ -205,7 +204,7 @@ impl PieceTable {
 
                 let p2_len = passed_size + piece.length - index;
                 let p2_newlines =
-                count_newlines(&buf[(piece.start + p1_len)..(piece.start + p1_len + p2_len)]);
+                    count_newlines(&buf[(piece.start + p1_len)..(piece.start + p1_len + p2_len)]);
                 let p2 = Piece::new(piece.piece_type, piece.start + p1_len, p2_len, p2_newlines);
 
                 self.pieces[i] = p1;
@@ -226,10 +225,17 @@ impl PieceTable {
         Err(String::from("`split_at` failed!"))
     }
 
-    pub fn _len(&self) -> usize {
+    pub fn len(&self) -> usize {
         let mut len = 0;
         for p in &self.pieces {
-            len += p.length
+            let buf = match p.piece_type {
+                PieceType::Added => &self.added,
+                PieceType::Original => &self.original,
+            };
+
+            let s = &buf[p.start..(p.start + p.length)];
+
+            len += UnicodeSegmentation::graphemes(s, true).count();
         }
         len
     }

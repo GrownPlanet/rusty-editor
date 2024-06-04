@@ -78,7 +78,11 @@ impl Frontend {
                     | (KeyModifiers::SHIFT, KeyCode::Enter) => self.editor.insert_newline()?,
                     // TODO: add ctrl-delete
                     (KeyModifiers::NONE, KeyCode::Backspace)
-                    | (KeyModifiers::SHIFT, KeyCode::Backspace) => self.editor.delete()?,
+                    | (KeyModifiers::SHIFT, KeyCode::Backspace) => {
+                        self.editor.delete_backspace()?
+                    }
+                    (KeyModifiers::NONE, KeyCode::Delete)
+                    | (KeyModifiers::SHIFT, KeyCode::Delete) => self.editor.delete()?,
                     (KeyModifiers::CONTROL, KeyCode::Char('s')) => self.editor.save()?,
                     _ => self.input_pressed = false,
                 }

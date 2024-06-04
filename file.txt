@@ -2,8 +2,6 @@ This is a file to test my editor :D
 
 pretty much fully featured ;)
 
-Hello, World
-
 rust:
 fn main() {
   println!("Hello, World!");

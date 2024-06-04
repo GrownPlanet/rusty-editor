@@ -10,27 +10,25 @@ mod piecetable;
 
 pub struct Document {
     piece_table: PieceTable,
-    file: File,
+    path: String,
 }
 
 impl Document {
     pub fn new(path: &str) -> Result<Self, String> {
-        let path = Path::new(path);
+        let filepath = Path::new(path);
 
-        let (file_contents, file) = if path.exists() {
-            let content = fs::read_to_string(path).map_err(|e| e.to_string())?;
-            // TODO: don't delete the file when just opening it :/
-            let file = File::create(path).map_err(|e| e.to_string())?;
-            (content, file)
+        let file_contents = if filepath.exists() {
+            fs::read_to_string(filepath).map_err(|e| e.to_string())?
         } else {
-            let content = String::from("\n");
-            let file = File::create(path).map_err(|e| e.to_string())?;
-            (content, file)
+            String::from("\n")
         };
 
         let piece_table = PieceTable::new(file_contents);
 
-        Ok(Self { piece_table, file })
+        Ok(Self {
+            piece_table,
+            path: path.to_string(),
+        })
     }
 
     pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
@@ -53,7 +51,16 @@ impl Document {
     }
 
     pub fn delete(&mut self, nth: usize, line: usize) -> Result<(), String> {
+
+        // don't delete the last newline
+        // I probably should allow it to open files that don't end with newlines
+        // meh, it works kind of for now
+        if self.piece_table.len() <= 1 {
+            return Ok(());
+        }
+
         let absolute_pos = self.piece_table.get_absolute_pos(nth, line);
+
         self.piece_table.delete(absolute_pos)?;
 
         Ok(())
@@ -61,14 +68,13 @@ impl Document {
 
     pub fn save(&mut self) -> Result<(), String> {
         // clear the file before writing to it again
-        self.file.set_len(0).map_err(|e| e.to_string())?;
+        let mut file = File::create(&self.path).map_err(|e| e.to_string())?;
 
-        let string = self
-            .piece_table
-            .gen_whole_string();
+        let string = self.piece_table.gen_whole_string();
 
-        self.file.write_all(&string.as_bytes()).map_err(|e| e.to_string())?;
-        
+        file.write_all(&string.as_bytes())
+            .map_err(|e| e.to_string())?;
+
         Ok(())
     }
 }

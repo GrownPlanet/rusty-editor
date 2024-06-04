@@ -26,7 +26,6 @@ impl Editor {
         })
     }
 
-    // TODO: optimize this function so it only gets the text that fits on screen
     pub fn get_text(&self, terminal_height: u16) -> Result<Vec<String>, String> {
         let from = self.scroll_off;
         let to = from + terminal_height;
@@ -78,8 +77,7 @@ impl Editor {
         Ok(())
     }
 
-    // TODO: fix this shit
-    pub fn delete(&mut self) -> Result<(), String> {
+    pub fn delete_backspace(&mut self) -> Result<(), String> {
         if self.cursor_pos.0 == 0 {
             if self.cursor_pos.1 == 0 {
                 return Ok(());
@@ -96,6 +94,13 @@ impl Editor {
 
         self.cursor_pos.0 -= 1;
 
+        self.document
+            .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+
+        Ok(())
+    }
+
+    pub fn delete(&mut self) -> Result<(), String> {
         self.document
             .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
 
