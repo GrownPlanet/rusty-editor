@@ -23,12 +23,25 @@ impl Document {
             String::from("\n")
         };
 
-        let piece_table = PieceTable::new(file_contents);
+        let mut piece_table = PieceTable::new(file_contents);
+        piece_table.insert(0, "<<ins>>").unwrap();
+        piece_table.insert(710, "<<ins>>").unwrap();
+        piece_table.insert(104, "<<ins>>").unwrap();
+        piece_table.insert(37, "<<ins>>").unwrap();
 
+        let s = piece_table.gen_string(0, 90).unwrap();
+        for i in s {
+            print!("{}", i);
+        }
+
+        std::process::exit(0);
+
+        /*
         Ok(Self {
-            piece_table,
-            path: path.to_string(),
+           piece_table,
+           path: path.to_string(),
         })
+        */
     }
 
     pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
@@ -51,7 +64,6 @@ impl Document {
     }
 
     pub fn delete(&mut self, nth: usize, line: usize) -> Result<(), String> {
-
         // don't delete the last newline
         // I probably should allow it to open files that don't end with newlines
         // meh, it works kind of for now
@@ -72,7 +84,7 @@ impl Document {
 
         let string = self.piece_table.gen_whole_string();
 
-        file.write_all(&string.as_bytes())
+        file.write_all(string.as_bytes())
             .map_err(|e| e.to_string())?;
 
         Ok(())

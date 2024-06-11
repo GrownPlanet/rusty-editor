@@ -30,7 +30,7 @@ impl Editor {
         let from = self.scroll_off;
         let to = from + terminal_height;
 
-        self.document.get_text(0, to as usize)
+        self.document.get_text(from as usize, to as usize)
     }
 
     pub fn get_cursor_pos(&self) -> (u16, u16) {
@@ -40,18 +40,28 @@ impl Editor {
     pub fn move_cursor(&mut self, direction: Direction, terminal_height: u16) {
         // moving the cursor
         match direction {
-            Direction::Up => self.cursor_pos.1 = self.cursor_pos.1.saturating_sub(1),
+            Direction::Up => {
+                if self.cursor_pos.1 == 0 {
+                    self.scroll_off = self.scroll_off.saturating_sub(1);
+                } else {
+                    self.cursor_pos.1 = self.cursor_pos.1.saturating_sub(1);
+                }
+            }
             Direction::Down => self.cursor_pos.1 += 1,
             Direction::Left => self.cursor_pos.0 = self.cursor_pos.0.saturating_sub(1),
             Direction::Right => self.cursor_pos.0 += 1,
         }
 
+        // TODO: scrolling
         // clamping the position
-        let max = std::cmp::min(
-            terminal_height - 1,
-            self.document.len() as u16 - self.scroll_off - 1,
-        );
+
+        let max = self.document.len() as u16 - self.scroll_off - 1;
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
+
+        if self.cursor_pos.1 == terminal_height {
+            self.cursor_pos.1 -= 1;
+            self.scroll_off += 1;
+        }
 
         // `- 1` because we don't want to insert after the newline
         let max = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;

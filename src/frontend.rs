@@ -93,21 +93,24 @@ impl Frontend {
     }
 
     fn draw_text(&mut self) -> Result<(), String> {
-        execute!(self.stdout, cursor::Hide, cursor::MoveTo(0, 0),).map_err(|e| e.to_string())?;
+        self.stdout
+            .execute(cursor::Hide)
+            .map_err(|e| e.to_string())?;
 
         let terminal_size = terminal::size().map_err(|e| e.to_string())?;
         let text = self.editor.get_text(terminal_size.1)?;
 
         for (offset, row) in text.iter().enumerate() {
-            self.stdout
-                .execute(Clear(ClearType::CurrentLine))
-                .map_err(|e| e.to_string())?;
+            execute!(
+                self.stdout,
+                MoveTo(0, offset as u16),
+                Clear(ClearType::CurrentLine),
+            )
+            .map_err(|e| e.to_string())?;
 
             self.stdout
-                .write_all(row.as_bytes())
+                .write_all(row.trim_end().as_bytes())
                 .map_err(|e| e.to_string())?;
-
-            execute!(self.stdout, MoveTo(0, offset as u16 + 1)).map_err(|e| e.to_string())?;
         }
 
         let cursor_pos = self.editor.get_cursor_pos();

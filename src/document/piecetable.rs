@@ -66,72 +66,26 @@ impl PieceTable {
             ]);
         }
 
-        let mut strings: Vec<String> = vec![String::new()];
-
-        let mut passed_newlines = 0;
+        let mut strings: Vec<String> = Vec::new();
 
         for piece in self.pieces.iter() {
-            let new_newlines = passed_newlines + piece.newlines.len();
-
-            // RETURNS TOO EARLY!!!!!
-            /*
-            if new_newlines <= from {
-                passed_newlines = new_newlines;
-                continue;
-            }
-            if passed_newlines >= to {
-                return strings;
-            }
-            */
-
-            let start = if passed_newlines < from && from < new_newlines {
-                from - passed_newlines
-            } else {
-                0
-            };
-
-            let end = if passed_newlines < to && to < new_newlines {
-                to - passed_newlines
-            } else {
-                piece.newlines.len()
-            };
-
             let buf = match piece.piece_type {
                 PieceType::Added => &self.added,
                 PieceType::Original => &self.original,
             };
 
-            let i = strings.len() - 1;
+            for (i, end) in piece.newlines.iter().enumerate() {
+                let start = match i {
+                    0 => 0,
+                    _ => piece.newlines[i - 1],
+                };
 
-            let mut to_push = match start {
-                0 => {
-                    &buf[piece.start
-                        ..(piece.start + maybe_get(&piece.newlines, start).unwrap_or(piece.length))]
-                }
-                _ => &buf[piece.newlines[start - 1]..(piece.start + piece.newlines[start])],
-            };
-
-            strings[i].push_str(to_push);
-
-            for i in (start + 1)..end {
-                to_push =
-                    &buf[piece.start + piece.newlines[i - 1]..(piece.start + piece.newlines[i])];
-                strings.push(to_push.to_string());
+                strings.push(buf[start..*end].to_owned());
             }
 
-            if !piece.newlines.is_empty()
-                && piece.newlines[piece.newlines.len() - 1] != piece.length
-            {
-                to_push = &buf[(piece.start + piece.newlines[piece.newlines.len() - 1])
-                    ..(piece.start + piece.length)];
-                strings.push(to_push.to_string());
-            }
+            let start = piece.newlines.last().unwrap_or(&0);
 
-            if to_push.ends_with('\n') {
-                strings.push(String::new());
-            }
-
-            passed_newlines = new_newlines;
+            strings.push(buf[*start..piece.length].to_owned());
         }
 
         let before_last = &strings[strings.len() - 2];
@@ -141,7 +95,7 @@ impl PieceTable {
 
         if to > strings.len() {
             for _ in 0..(to - strings.len()) {
-                strings.push(String::from("~"));
+                strings.push(String::from("~\n"));
             }
         }
 
@@ -150,6 +104,13 @@ impl PieceTable {
     }
 
     pub fn gen_whole_string(&self) -> String {
+
+fn maybe_get<T: Copy>(arr: &[T], i: usize) -> Option<T> {
+    if i >= arr.len() {
+        return None;
+    }
+    Some(arr[i])
+}
         let mut string = String::new();
 
         for piece in self.pieces.iter() {
@@ -159,30 +120,6 @@ impl PieceTable {
             };
 
             string.push_str(&buf[piece.start..(piece.start + piece.length)]);
-
-            /*
-            let mut to_push = &buf[piece.start ..(piece.start + maybe_get(&piece.newlines, 0).unwrap_or(piece.length))] ;
-
-            string.push_str(to_push);
-
-            for i in 1..end {
-                to_push =
-                    &buf[piece.start + piece.newlines[i - 1]..(piece.start + piece.newlines[i])];
-                string.push_str(to_push);
-            }
-
-            if !piece.newlines.is_empty()
-                && piece.newlines[piece.newlines.len() - 1] != piece.length
-            {
-                to_push = &buf[(piece.start + piece.newlines[piece.newlines.len() - 1])
-                    ..(piece.start + piece.length)];
-                string.push_str(to_push);
-            }
-
-            if to_push.ends_with('\n') {
-                string.push_str("");
-            }
-            */
         }
 
         string
@@ -290,7 +227,7 @@ impl PieceTable {
         Ok(())
     }
 
-    pub fn delete_range(&mut self, from: usize, to: usize) -> Result<(), String> {
+    pub fn _delete_range(&mut self, from: usize, to: usize) -> Result<(), String> {
         if from > to {
             return Err(format![
                 "delete_range: from (= {}) cannot be bigger than to (= {})",
@@ -316,7 +253,7 @@ impl PieceTable {
 
                 let len_before = (0..i).fold(0, |acc, x| acc + self.pieces[x].length);
 
-                self.delete_range(from, to - len_before)?;
+                self._delete_range(from, to - len_before)?;
             }
         }
 
@@ -374,8 +311,7 @@ impl PieceTable {
                     return absolute_pos;
                 }
 
-                absolute_pos = temp_absolute_pos;
-                absolute_pos += newline_pos - start;
+                absolute_pos = temp_absolute_pos + newline_pos - start;
                 temp_absolute_pos = absolute_pos;
                 passed_newlines += 1;
             }
@@ -389,17 +325,7 @@ impl PieceTable {
             temp_absolute_pos += piece.length - start;
         }
 
-        return usize::MAX;
-        // absolute_pos
-
-        /*
-        * why dis work??
-        let mut absolute_pos = nth;
-        for i in 0..line {
-        absolute_pos += self.get_line_length(i);
-        }
         absolute_pos
-        */
     }
 
     fn _print_table(&self) {
@@ -427,11 +353,4 @@ fn count_newlines(string: &str) -> Vec<usize> {
         .filter(|(_, c)| *c == '\n')
         .map(|(i, _)| i + 1)
         .collect()
-}
-
-fn maybe_get<T: Copy>(arr: &[T], i: usize) -> Option<T> {
-    if i >= arr.len() {
-        return None;
-    }
-    Some(arr[i])
 }
