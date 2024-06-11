@@ -66,7 +66,7 @@ impl PieceTable {
             ]);
         }
 
-        let mut strings: Vec<String> = Vec::new();
+        let mut strings: Vec<String> = vec![String::new()];
 
         for piece in self.pieces.iter() {
             let buf = match piece.piece_type {
@@ -76,16 +76,23 @@ impl PieceTable {
 
             for (i, end) in piece.newlines.iter().enumerate() {
                 let start = match i {
-                    0 => 0,
-                    _ => piece.newlines[i - 1],
+                    0 => piece.start,
+                    _ => piece.newlines[i - 1] + piece.start,
                 };
 
-                strings.push(buf[start..*end].to_owned());
+                let li = strings.len() - 1;
+                strings[li].push_str(&buf[start..(*end + piece.start)]);
+                strings.push(String::new());
             }
 
-            let start = piece.newlines.last().unwrap_or(&0);
+            let start = *piece.newlines.last().unwrap_or(&0) + piece.start;
 
-            strings.push(buf[*start..piece.length].to_owned());
+            if start > piece.length + piece.start {
+                continue;
+            }
+
+            let li = strings.len() - 1;
+            strings[li].push_str(&buf[start..piece.length + piece.start]);
         }
 
         let before_last = &strings[strings.len() - 2];
@@ -104,13 +111,6 @@ impl PieceTable {
     }
 
     pub fn gen_whole_string(&self) -> String {
-
-fn maybe_get<T: Copy>(arr: &[T], i: usize) -> Option<T> {
-    if i >= arr.len() {
-        return None;
-    }
-    Some(arr[i])
-}
         let mut string = String::new();
 
         for piece in self.pieces.iter() {

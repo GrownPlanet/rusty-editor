@@ -23,25 +23,12 @@ impl Document {
             String::from("\n")
         };
 
-        let mut piece_table = PieceTable::new(file_contents);
-        piece_table.insert(0, "<<ins>>").unwrap();
-        piece_table.insert(710, "<<ins>>").unwrap();
-        piece_table.insert(104, "<<ins>>").unwrap();
-        piece_table.insert(37, "<<ins>>").unwrap();
+        let piece_table = PieceTable::new(file_contents);
 
-        let s = piece_table.gen_string(0, 90).unwrap();
-        for i in s {
-            print!("{}", i);
-        }
-
-        std::process::exit(0);
-
-        /*
         Ok(Self {
            piece_table,
            path: path.to_string(),
         })
-        */
     }
 
     pub fn get_text(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
