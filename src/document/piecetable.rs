@@ -38,7 +38,11 @@ pub struct PieceTable {
 }
 
 impl PieceTable {
-    pub fn new(string: String) -> Self {
+    pub fn new(mut string: String) -> Self {
+        if string.is_empty() {
+            string = String::from("\n");
+        }
+
         let mut newlines = count_newlines(&string);
 
         // the last line won't be returned if there isn't a newline at the end
@@ -95,8 +99,7 @@ impl PieceTable {
             strings[li].push_str(&buf[start..piece.length + piece.start]);
         }
 
-        let before_last = &strings[strings.len() - 2];
-        if before_last.chars().last().is_some_and(|c| c == '\n') {
+        if strings.last().is_some_and(|s| s.is_empty()) {
             let _ = strings.pop();
         }
 
@@ -208,7 +211,7 @@ impl PieceTable {
 
     pub fn insert_char(&mut self, index: usize, ch: char) -> Result<(), String> {
         let start_index = self.added.len();
-        let newline_vec = if ch != '\n' { vec![] } else { vec![0] };
+        let newline_vec = if ch != '\n' { vec![] } else { vec![1] };
 
         self.added.push(ch);
 
@@ -244,7 +247,13 @@ impl PieceTable {
 
         if current_start == previous_start + previous_length {
             self.pieces.remove(index);
-            self.pieces[index - 1].length += current_length;
+            let new_piece = &mut self.pieces[index - 1];
+            new_piece.length += current_length;
+
+            let string = &self.added[new_piece.start..new_piece.start + new_piece.length];
+            let newlines = count_newlines(string);
+
+            new_piece.newlines = newlines;
         }
     }
 

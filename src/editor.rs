@@ -88,7 +88,6 @@ impl Editor {
             self.scroll_off += 1;
         }
 
-
         Ok(())
     }
 
