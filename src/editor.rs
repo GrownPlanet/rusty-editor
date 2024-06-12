@@ -52,9 +52,6 @@ impl Editor {
             Direction::Right => self.cursor_pos.0 += 1,
         }
 
-        // TODO: scrolling
-        // clamping the position
-
         let max = self.document.len() as u16 - self.scroll_off - 1;
         self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
 
@@ -64,40 +61,48 @@ impl Editor {
         }
 
         // `- 1` because we don't want to insert after the newline
-        let max = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;
+        let max = self.document.line_len((self.cursor_pos.1 + self.scroll_off) as usize) as u16 - 1;
         self.cursor_pos.0 = self.cursor_pos.0.clamp(0, max);
     }
 
     pub fn insert(&mut self, ch: char) -> Result<(), String> {
         self.document
-            .insert(ch, self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+            .insert(ch, self.cursor_pos.0 as usize, (self.cursor_pos.1 + self.scroll_off) as usize)?;
 
         self.cursor_pos.0 += 1;
-
         Ok(())
     }
 
-    pub fn insert_newline(&mut self) -> Result<(), String> {
+    pub fn insert_newline(&mut self, terminal_height: u16) -> Result<(), String> {
         self.document
-            .insert('\n', self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+            .insert('\n', self.cursor_pos.0 as usize, (self.cursor_pos.1 + self.scroll_off) as usize)?;
 
         self.cursor_pos.1 += 1;
         self.cursor_pos.0 = 0;
+
+        let max = self.document.len() as u16 - self.scroll_off - 1;
+        self.cursor_pos.1 = self.cursor_pos.1.clamp(0, max);
+
+        if self.cursor_pos.1 == terminal_height {
+            self.cursor_pos.1 -= 1;
+            self.scroll_off += 1;
+        }
+
 
         Ok(())
     }
 
     pub fn delete_backspace(&mut self) -> Result<(), String> {
         if self.cursor_pos.0 == 0 {
-            if self.cursor_pos.1 == 0 {
+            if (self.cursor_pos.1 + self.scroll_off) == 0 {
                 return Ok(());
             }
 
             self.cursor_pos.1 -= 1;
-            self.cursor_pos.0 = self.document.line_len(self.cursor_pos.1 as usize) as u16 - 1;
+            self.cursor_pos.0 = self.document.line_len((self.cursor_pos.1 + self.scroll_off) as usize) as u16 - 1;
 
             self.document
-                .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+                .delete(self.cursor_pos.0 as usize, (self.cursor_pos.1 + self.scroll_off) as usize)?;
 
             return Ok(());
         }
@@ -105,14 +110,14 @@ impl Editor {
         self.cursor_pos.0 -= 1;
 
         self.document
-            .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+            .delete(self.cursor_pos.0 as usize, (self.cursor_pos.1 + self.scroll_off) as usize)?;
 
         Ok(())
     }
 
     pub fn delete(&mut self) -> Result<(), String> {
         self.document
-            .delete(self.cursor_pos.0 as usize, self.cursor_pos.1 as usize)?;
+            .delete(self.cursor_pos.0 as usize, (self.cursor_pos.1 + self.scroll_off) as usize)?;
 
         Ok(())
     }

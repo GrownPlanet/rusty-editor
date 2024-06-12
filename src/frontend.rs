@@ -75,7 +75,7 @@ impl Frontend {
                         self.editor.insert(c)?;
                     }
                     (KeyModifiers::NONE, KeyCode::Enter)
-                    | (KeyModifiers::SHIFT, KeyCode::Enter) => self.editor.insert_newline()?,
+                    | (KeyModifiers::SHIFT, KeyCode::Enter) => self.editor.insert_newline(terminal_height)?,
                     // TODO: add ctrl-delete
                     (KeyModifiers::NONE, KeyCode::Backspace)
                     | (KeyModifiers::SHIFT, KeyCode::Backspace) => {
