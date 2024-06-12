@@ -185,7 +185,7 @@ impl PieceTable {
         newlines
     }
 
-    pub fn insert(&mut self, index: usize, string: &str) -> Result<(), String> {
+    pub fn _insert(&mut self, index: usize, string: &str) -> Result<(), String> {
         let start_index = self.added.len();
         let newlines = count_newlines(string);
 
@@ -204,6 +204,48 @@ impl PieceTable {
         );
 
         Ok(())
+    }
+
+    pub fn insert_char(&mut self, index: usize, ch: char) -> Result<(), String> {
+        let start_index = self.added.len();
+        let newline_vec = if ch != '\n' { vec![] } else { vec![0] };
+
+        self.added.push(ch);
+
+        let i = self.split_at(index)?;
+
+        self.pieces.insert(
+            i,
+            Piece::new(
+                PieceType::Added,
+                start_index,
+                self.added.len() - start_index,
+                newline_vec,
+            ),
+        );
+
+        // inserting many times in the same place causes the piece table to have a bunch of 1 sized
+        // pieces, this de-fragments them
+        self.group_pieces(i);
+
+        Ok(())
+    }
+
+    pub fn group_pieces(&mut self, index: usize) {
+        if index == 0 {
+            return;
+        }
+
+        let current_start = self.pieces[index].start;
+        let current_length = self.pieces[index].length;
+
+        let previous_start = self.pieces[index - 1].start;
+        let previous_length = self.pieces[index - 1].length;
+
+        if current_start == previous_start + previous_length {
+            self.pieces.remove(index);
+            self.pieces[index - 1].length += current_length;
+        }
     }
 
     pub fn delete(&mut self, index: usize) -> Result<(), String> {
@@ -236,8 +278,6 @@ impl PieceTable {
         }
 
         let i = self.split_at(to)? - 1;
-
-        self._print_table();
 
         let leng = to - from;
 
