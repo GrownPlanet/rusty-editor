@@ -1,12 +1,11 @@
-/*
-* . src
-* |- editor               ; no big main file :)
-*   |- document           ; contains the document
-*       |- piece table    ; contains the content of the document
-*   |- frontent           ; bevy and rendering
-*       |- ???            ; idk yet
-*   |- config             ; where all the config will be stored
-* */
+// TODO:
+// - unicode support
+// - faster rendering of text
+//     - re-render only the changed lines
+// - make document::piecetable::PieceTable::gen_string more efficient
+// - keep cursur position when going from a larger to a smaller back to a larger line
+// - ctr-delete
+// - undo and redo
 
 use std::{env, process::exit};
 

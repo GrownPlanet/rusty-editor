@@ -60,7 +60,6 @@ impl PieceTable {
     }
 
     // TODO:
-    // - add some more error handling
     // - error handling when to or from is too big
     pub fn gen_string(&self, from: usize, to: usize) -> Result<Vec<String>, String> {
         if from > to {
